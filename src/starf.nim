@@ -85,18 +85,20 @@ proc convertCsv*(config: MetaConfig, input: string, output="") =
     except CsvError:
       discard
 
-proc main(config = "config.json", mode="json", href="http:127.0.0.1", database="star-intel", couchPort=5489, upload=false, output = "", input: string) =
+proc main(config = "config.json", mode="json", href="http:127.0.0.1", database="star-intel", couchPort=5489, upload=false, username = "", pass = "", output = "", input: string) =
   echo 1
   var star = initStarIntel(href, database, couchPort)
   let meta = readConfig(config)
   case mode:
     of "json":
       if upload == true:
+        waitFor star.login(username, pass)
         waitFor meta.injestJson(star, input)
       else:
         meta.convertJson(input, output)
     of "csv":
       if upload == true:
+        waitFor star.login(username, pass)
         waitFor meta.injestCsv(star, input)
       else:
         meta.convertCsv(input, output)
