@@ -1,0 +1,168 @@
+#+title: Readme
+
+* StarFormatter
+Star Formatter is a tool to convert json or csv data into starintel's json format.
+It takes a json config file and uses that to know what fields contain the data types, like name, email, ect.
+Arrays are supported, nested json is not at this point.
+
+*** Compile & Install
+Install nim lang.
+~nimble install~ from project root.
+*** Usage
+Options
+#+begin_example
+Usage:
+  main [REQUIRED,optional-params]
+Options:
+  -h, --help                                  print this cligen-erated help
+  --help-syntax                               advanced: prepend,plurals,..
+  -c=, --config=    string  "config.json"     set config
+  -m=, --mode=      string  "json"            set mode
+  --href=           string  "http:127.0.0.1"  set href
+  -d=, --database=  string  "star-intel"      set database
+  --couchPort=      int     5489              set couchPort
+  -u, --upload      bool    false             set upload
+  -o=, --output=    string  ""                set output
+  -i=, --input=     string  REQUIRED          set input
+
+
+#+end_example
+
+Parse json
+
+#+begin_src shell
+starf -m json -i input.json -o ouput.json
+#+end_src
+
+Parse a csv and upload to a remote host
+#+begin_src shell
+starf -c cvs-config.json -m csv --href http://exampleCouchdb -i input.csv
+#+end_src
+*** Configuration
+Star Formatter is configured by a json file that defines what fields contains what.
+Examples will be put in the examples/ dir
+Example config
+#+begin_src json
+{
+    "jsonConfig": {
+        "meta": {
+            "id": "id",
+            "rev": "rev",
+            "dateAdded": "date",
+            "dateUpdated": "date",
+            "dataset": "database",
+            "sourceDataset": "Google board of directors",
+            "memberships": "",
+            "operationId": "",
+            "defaultOrgType": "Corperation"
+        },
+        "people": {
+            "dtype": "person",
+            "name": "",
+            "fname": "fname",
+            "mname": "mname",
+            "lname": "lname",
+            "email": "email",
+            "phone": "",
+            "orgName": "org",
+            "orgType": "",
+            "phoneArray": "",
+            "emailArray": "",
+            "orgArray": "",
+            "street": "",
+            "street2": "",
+            "city": "",
+            "postal": "",
+            "region": "",
+            "country": "",
+            "address": "",
+            "nameOrder": [],
+            "roles": "roles",
+            "title": "title",
+            "bio": "",
+            "socialMediaArray": "",
+            "lat": "",
+            "long": "",
+            "ip": "",
+            "dob": "",
+            "gender": "",
+            "interests": ""
+        },
+        "orgs": {
+            "dtype": "org",
+            "name": "name",
+            "orgType": "type",
+            "reg": "reg"
+        },
+        "emails": {
+            "dtype": "email",
+            "emailUsername": "emailUsername",
+            "emailDomain": "emailDomain",
+            "emailPassword": "emailPassword",
+            "username": "username"
+        },
+        "address": {
+            "dtype": "type",
+            "street": "street",
+            "street2": "street2",
+            "city": "city",
+            "region": "region",
+            "zip": "zip",
+            "country": "country"
+        }
+    }
+}
+
+#+end_src
+**** Config options
+***** Meta Options
+| Option         | Description                                                                      |
+|                |                                                                                  |
+|----------------+----------------------------------------------------------------------------------|
+| id             | This field will be used for document id, not required.                           |
+| rev            | Used only if you are importing documents you exported from couchdb, not required |
+| dateAdded      | Used to date when the document was added to the database                         |
+| dateUpdated    | Used to date when the document was updated                                       |
+| dataset        | What is the destination dataset?                                                 |
+| sourceDataset  | Source for the dataset                                                           |
+| operationId    | Operation id/ name                                                               |
+| memberships    | Deprecated/not added. Might be used to define relationships                      |
+| defaultOrgType | The Default the organization type (eg: NGO, Non Profit)                          |
+|                |                                                                                  |
+
+***** People Options
+
+| Option           | Description                                                                |
+|------------------+----------------------------------------------------------------------------|
+| dtype            | used incase it is not a custom data type. Should probaly just use "person" |
+| name             | Not used yet, but will be for the full name field                          |
+| fname            | First name field                                                           |
+| mname            | Middle name if needed                                                      |
+| lname            | last name field                                                            |
+| email            | email field.                                                               |
+| emailArray       | email field, must be an array.                                             |
+| phone            | phone field                                                                |
+| phoneArray       | phone field, must be an array                                              |
+| orgArray         | org array field, must be an array                                          |
+| orgName          | Field with org name.                                                       |
+| orgType          | Type of org, if not found will use the type in defaultOrgType              |
+| address          | set to true if address data is needed                                      |
+| street           | street address field                                                       |
+| street2          | field with extra street info                                               |
+| city             | city field                                                                 |
+| region           | region/state field                                                         |
+| country          | country field                                                              |
+| postal           | postal code/zip field options                                              |
+| roles            | role of the person at the organization                                     |
+| nameOrder        | not used                                                                   |
+| title            | not used                                                                   |
+| bio              | think of it as an extra infomation field.                                  |
+| socialMediaArray | an array of social media                                                   |
+| lat              | lattitude, used for address                                                |
+| long             | longtiude, used for address                                                |
+| ip               | Needs to be renamed, its an array of ip field.                             |
+| dob              | date of birth field                                                        |
+| gender           | male/female field                                                          |
+| interests        | an array of interests                                                      |
+
+#+end_lang                                                         |
