@@ -11,5 +11,5 @@ bin           = @["starf"]
 
 requires "nim >= 1.6.8"
 requires "jsony"
-requires "starintel_doc >= 1.0.0"
+requires "starintel_doc"
 requires "cligen"
