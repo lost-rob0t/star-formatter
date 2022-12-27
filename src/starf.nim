@@ -1,10 +1,9 @@
 import starintel_doc
 import jsony, json
 import parsecsv
-import starintel_couchdb
 import asyncdispatch
 import mycouch
-proc injestCsv*(config: MetaConfig, star: AsyncStarintelDatabase, path: string) {.async.} =
+proc injestCsv*(config: MetaConfig, star: AsyncCouchDBClient, path: string, database: string = "star-intel") {.async.} =
   var
     p: CsvParser
     docs: seq[JsonNode]
@@ -21,15 +20,15 @@ proc injestCsv*(config: MetaConfig, star: AsyncStarintelDatabase, path: string) 
       docs.add(jdoc)
       jdoc = %*{}
       if docs.len == 1000:
-        discard await star.server.bulkDocs(star.database, %*docs)
+        discard await star.bulkDocs(database, %*docs)
         docs = @[]
       if docs.len != 0:
-        discard await star.server.bulkDocs(star.database, %*docs)
+        discard await star.bulkDocs(database, %*docs)
     except KeyError:
       discard
     except CsvError:
       discard
-proc injestJson*(config: MetaConfig, star: AsyncStarintelDatabase, path: string) {.async.} =
+proc injestJson*(config: MetaConfig, star: AsyncCouchDBClient, path: string, database: string = "star-intel") {.async.} =
   var
     docs: seq[JsonNode]
     jdoc: JsonNode
@@ -37,15 +36,21 @@ proc injestJson*(config: MetaConfig, star: AsyncStarintelDatabase, path: string)
   for line in f.lines:
     try:
       var person = config.parsePerson(line.fromJson)
-      jdoc = %*person
+      person.makeUUID
+      jdoc = %* person
       jdoc["_id"] = jdoc["id"]
       docs.add(jdoc)
       jdoc = %*{}
       if docs.len == 1000:
-        discard await star.server.bulkDocs(star.database, %*docs)
+        let l = await star.bulkDocs(database, %docs)
+        when defined(debug):
+          echo $l
+          echo %*docs
         docs = @[]
       if docs.len != 0:
-        discard await star.server.bulkDocs(star.database, %*docs)
+        let l = await star.bulkDocs(database, %docs)
+        when defined(debug):
+          echo $l
     except KeyError:
       discard
 proc convertJson*(config: MetaConfig, input: string, output = "") =
@@ -56,7 +61,7 @@ proc convertJson*(config: MetaConfig, input: string, output = "") =
   for line in f.lines:
     try:
       var person = config.parsePerson(line.fromJson)
-      var jdoc = %*person
+      var jdoc = %person
       jdoc["_id"] = jdoc["id"]
 
       o.writeLine(jdoc)
@@ -75,7 +80,7 @@ proc convertCsv*(config: MetaConfig, input: string, output="") =
   while p.readRow():
     try:
       var person = config.parsePerson(p)
-      var jdoc = %*person
+      var jdoc = %person
       jdoc["_id"] = jdoc["id"]
 
       o.writeLine(jdoc)
@@ -87,19 +92,19 @@ proc convertCsv*(config: MetaConfig, input: string, output="") =
 
 proc main(config = "config.json", mode="json", href="http:127.0.0.1", database="star-intel", couchPort=5489, upload=false, username = "", pass = "", output = "", input: string) =
   echo 1
-  var star = initStarIntel(href, database, couchPort)
+  var star = newAsyncCouchDBClient(href, couchPort)
   let meta = readConfig(config)
   case mode:
     of "json":
       if upload == true:
-        waitFor star.login(username, pass)
-        waitFor meta.injestJson(star, input)
+        discard waitFor star.cookieAuth(username, pass)
+        waitFor meta.injestJson(star, input, database)
       else:
         meta.convertJson(input, output)
     of "csv":
       if upload == true:
-        waitFor star.login(username, pass)
-        waitFor meta.injestCsv(star, input)
+        discard waitFor star.cookieAuth(username, pass)
+        waitFor meta.injestCsv(star, input, database)
       else:
         meta.convertCsv(input, output)
 
