@@ -107,7 +107,10 @@ proc convertCsv*(config: MetaConfig, input: string, output="") =
       discard
 
 
-proc main(config = "config.json", mode="json", href="http:127.0.0.1", database="star-intel", couchPort=5489, upload=false, username = "", pass = "", output = "", input = "") =
+proc main(config = "config.json", mode="json", href="http:127.0.0.1",
+                                      database="star-intel",
+                                      couchPort=5489, upload=false,
+                                      username = "", pass = "", output = "", input = "") =
   var star = newAsyncCouchDBClient(href, couchPort)
   case mode:
     of "json":
