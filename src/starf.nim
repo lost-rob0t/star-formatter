@@ -119,7 +119,7 @@ proc main(config = "config.json", mode="json", href="http:127.0.0.1", database="
         meta.convertJson(input, output)
     of "csv":
       let meta = readConfig(config)
-      i upload == true:
+      if upload == true:
         discard waitFor star.cookieAuth(username, pass)
         waitFor meta.injestCsv(star, input, database)
       else:
